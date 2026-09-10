@@ -1,0 +1,19 @@
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #131412;
+    color: #e4e2df;
+    font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+  }
+  body {
+    overscroll-behavior: none;
+    min-height: 100vh;
+  }
+  main > :first-child { margin-top: 0 !important; }
+  main > :last-child { margin-bottom: 0 !important; }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
