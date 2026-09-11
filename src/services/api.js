@@ -12,6 +12,9 @@ const DEFAULT_GRADUATION_INFO = {
   dressCode: "Lịch sự / Trang phục tự do / Áo Cử Nhân",
   avatarUrl: "/avatar.jpg",
   quote: "Hành trình vạn dặm bắt đầu từ một bước chân. Cảm ơn vì đã luôn đồng hành cùng tôi!",
+  phone: "0944788931",
+  zaloUrl: "https://zalo.me/0944788931",
+  facebookUrl: "https://www.facebook.com/hg.bin.52",
   theme: "gold"
 }
 

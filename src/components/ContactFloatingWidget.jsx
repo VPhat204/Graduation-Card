@@ -8,10 +8,10 @@ export default function ContactFloatingWidget({
   const [copied, setCopied] = useState(false)
   const menuRef = useRef(null)
 
-  const phone = hostData.phone || "0901234567"
+  const phone = hostData.phone || "0944788931"
   const cleanPhone = phone.replace(/[^0-9]/g, '')
-  const zaloUrl = hostData.zaloUrl || `https://zalo.me/${cleanPhone || '0901234567'}`
-  const facebookUrl = hostData.facebookUrl || "https://facebook.com"
+  const zaloUrl = hostData.zaloUrl || `https://zalo.me/${cleanPhone || '0944788931'}`
+  const facebookUrl = hostData.facebookUrl || "https://www.facebook.com/hg.bin.52"
   const graduateName = hostData.graduateName || "Hồ Văn Phát"
 
   const handleCopyPhone = (e) => {
