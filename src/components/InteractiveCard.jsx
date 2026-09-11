@@ -3,7 +3,6 @@ import { Heart, Smile, Camera, MapPin, Palette, Quote, PartyPopper, X } from 'lu
 
 const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTriggerConfetti }, ref) {
   const [isFlipped, setIsFlipped] = useState(false)
-  const cardRef = useRef(null)
   const wrapperRef = useRef(null)
 
   const toggleFlip = () => {
@@ -16,18 +15,18 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
   }))
 
   const handleMouseMove = (e) => {
-    if (isFlipped || !wrapperRef.current || !cardRef.current) return
+    if (isFlipped || !wrapperRef.current) return
     const rect = wrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left - rect.width / 2
     const y = e.clientY - rect.top - rect.height / 2
     const rotateX = (-y / rect.height) * 8
     const rotateY = (x / rect.width) * 8
-    cardRef.current.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+    wrapperRef.current.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
   }
 
   const handleMouseLeave = () => {
-    if (!isFlipped && cardRef.current) {
-      cardRef.current.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)'
+    if (wrapperRef.current) {
+      wrapperRef.current.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)'
     }
   }
 
@@ -39,22 +38,46 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
     }
   }
 
+  // Transition timing for each face:
+  // Front: immediately starts rotating away (0→-90deg)
+  // Back:  delays 0.25s so front disappears first (90deg→0deg)
+  const DURATION = 300 // ms per half
+  const frontStyle = {
+    transform: isFlipped
+      ? 'perspective(1000px) rotateY(-90deg)'
+      : 'perspective(1000px) rotateY(0deg)',
+    transition: `transform ${DURATION}ms ease-in`,
+    backfaceVisibility: 'hidden',
+    WebkitBackfaceVisibility: 'hidden',
+    pointerEvents: isFlipped ? 'none' : 'auto',
+  }
+  const backStyle = {
+    transform: isFlipped
+      ? 'perspective(1000px) rotateY(0deg)'
+      : 'perspective(1000px) rotateY(90deg)',
+    transition: isFlipped
+      ? `transform ${DURATION}ms ease-out ${DURATION}ms`
+      : `transform ${DURATION}ms ease-in`,
+    backfaceVisibility: 'hidden',
+    WebkitBackfaceVisibility: 'hidden',
+    pointerEvents: isFlipped ? 'auto' : 'none',
+  }
+
   return (
-    <section ref={wrapperRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} className="w-full" style={{ perspective: '1400px' }}>
-      <div
-        ref={cardRef}
-        id="interactive-card"
-        className="relative w-full rounded-xl transition-transform duration-700"
-        style={{
-          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-          transformStyle: 'preserve-3d',
-          WebkitTransformStyle: 'preserve-3d',
-        }}
-      >
+    <section
+      ref={wrapperRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="w-full"
+      style={{ transition: 'transform 0.15s ease' }}
+    >
+      {/* Container: relative so back face can overlay */}
+      <div id="interactive-card" className="relative w-full">
+
         {/* CARD FRONT */}
         <div
-          className={`w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl relative overflow-hidden border border-primary/20 ${isFlipped ? 'pointer-events-none' : ''}`}
-          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          className={`w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl relative overflow-hidden border border-primary/20`}
+          style={frontStyle}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-surface-container-lowest/80 pointer-events-none"></div>
           <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none rounded-lg bg-transparent opacity-40 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.4)]"></div>
@@ -228,17 +251,11 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
           </div>
         </div>
 
-        {/* CARD BACK */}
+        {/* CARD BACK — overlays front, starts at 90deg and rotates to 0 when flipped */}
         <div
           id="card-back"
           className="absolute inset-0 w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl overflow-y-auto flex flex-col justify-between border border-primary/20"
-          style={{
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-            WebkitTransform: 'rotateY(180deg)',
-            minHeight: '100%',
-          }}
+          style={backStyle}
         >
           <div className="flex flex-col gap-space-lg">
             <div className="flex items-center justify-between">
