@@ -1,10 +1,149 @@
+:root, [data-theme="gold"] {
+  --primary-rgb: 242 202 80;
+  --primary-container-rgb: 212 175 55;
+  --on-primary-rgb: 60 47 0;
+  --on-primary-container-rgb: 85 67 0;
+  --background-rgb: 19 20 18;
+  --surface-rgb: 19 20 18;
+  --surface-container-lowest-rgb: 14 14 13;
+  --surface-container-low-rgb: 27 28 26;
+  --surface-container-rgb: 31 32 30;
+  --surface-container-high-rgb: 42 42 40;
+  --surface-container-highest-rgb: 52 53 51;
+  --surface-bright-rgb: 57 57 56;
+  --on-surface-rgb: 228 226 223;
+  --on-surface-variant-rgb: 208 197 175;
+  --outline-rgb: 153 144 124;
+  --outline-variant-rgb: 77 70 53;
+  --secondary-rgb: 186 199 225;
+  --secondary-container-rgb: 61 74 95;
+  --tertiary-rgb: 234 204 117;
+  --tertiary-container-rgb: 205 177 93;
+}
+
+[data-theme="navy"] {
+  --primary-rgb: 56 189 248;
+  --primary-container-rgb: 2 132 199;
+  --on-primary-rgb: 0 45 69;
+  --on-primary-container-rgb: 224 242 254;
+  --background-rgb: 11 17 32;
+  --surface-rgb: 15 23 42;
+  --surface-container-lowest-rgb: 7 11 20;
+  --surface-container-low-rgb: 19 29 53;
+  --surface-container-rgb: 23 35 64;
+  --surface-container-high-rgb: 30 45 79;
+  --surface-container-highest-rgb: 39 58 99;
+  --surface-bright-rgb: 46 67 114;
+  --on-surface-rgb: 240 246 252;
+  --on-surface-variant-rgb: 148 163 184;
+  --outline-rgb: 100 116 139;
+  --outline-variant-rgb: 51 65 85;
+  --secondary-rgb: 125 211 252;
+  --secondary-container-rgb: 3 105 161;
+  --tertiary-rgb: 56 189 248;
+  --tertiary-container-rgb: 2 132 199;
+}
+
+[data-theme="burgundy"] {
+  --primary-rgb: 251 113 133;
+  --primary-container-rgb: 225 29 72;
+  --on-primary-rgb: 76 5 25;
+  --on-primary-container-rgb: 255 228 230;
+  --background-rgb: 21 8 12;
+  --surface-rgb: 28 13 18;
+  --surface-container-lowest-rgb: 13 4 7;
+  --surface-container-low-rgb: 36 18 25;
+  --surface-container-rgb: 44 23 32;
+  --surface-container-high-rgb: 55 31 41;
+  --surface-container-highest-rgb: 68 40 52;
+  --surface-bright-rgb: 80 48 62;
+  --on-surface-rgb: 255 241 242;
+  --on-surface-variant-rgb: 253 164 175;
+  --outline-rgb: 190 18 60;
+  --outline-variant-rgb: 76 5 25;
+  --secondary-rgb: 253 164 175;
+  --secondary-container-rgb: 159 18 57;
+  --tertiary-rgb: 251 113 133;
+  --tertiary-container-rgb: 190 18 60;
+}
+
+[data-theme="emerald"] {
+  --primary-rgb: 52 211 153;
+  --primary-container-rgb: 5 150 105;
+  --on-primary-rgb: 2 44 34;
+  --on-primary-container-rgb: 209 250 229;
+  --background-rgb: 6 21 16;
+  --surface-rgb: 10 30 23;
+  --surface-container-lowest-rgb: 4 13 10;
+  --surface-container-low-rgb: 14 39 31;
+  --surface-container-rgb: 18 49 39;
+  --surface-container-high-rgb: 24 60 49;
+  --surface-container-highest-rgb: 32 74 61;
+  --surface-bright-rgb: 40 87 72;
+  --on-surface-rgb: 236 253 245;
+  --on-surface-variant-rgb: 167 243 208;
+  --outline-rgb: 5 150 105;
+  --outline-variant-rgb: 6 78 59;
+  --secondary-rgb: 110 231 183;
+  --secondary-container-rgb: 4 120 87;
+  --tertiary-rgb: 52 211 153;
+  --tertiary-container-rgb: 5 150 105;
+}
+
+[data-theme="rose"] {
+  --primary-rgb: 244 114 182;
+  --primary-container-rgb: 219 39 119;
+  --on-primary-rgb: 80 7 36;
+  --on-primary-container-rgb: 252 231 243;
+  --background-rgb: 23 11 19;
+  --surface-rgb: 31 16 26;
+  --surface-container-lowest-rgb: 14 6 12;
+  --surface-container-low-rgb: 39 21 33;
+  --surface-container-rgb: 48 27 42;
+  --surface-container-high-rgb: 60 34 53;
+  --surface-container-highest-rgb: 74 44 66;
+  --surface-bright-rgb: 88 53 79;
+  --on-surface-rgb: 253 242 248;
+  --on-surface-variant-rgb: 251 207 232;
+  --outline-rgb: 190 24 93;
+  --outline-variant-rgb: 112 13 59;
+  --secondary-rgb: 249 168 212;
+  --secondary-container-rgb: 157 23 77;
+  --tertiary-rgb: 244 114 182;
+  --tertiary-container-rgb: 219 39 119;
+}
+
+[data-theme="amethyst"] {
+  --primary-rgb: 192 132 252;
+  --primary-container-rgb: 147 51 234;
+  --on-primary-rgb: 59 7 100;
+  --on-primary-container-rgb: 243 232 255;
+  --background-rgb: 15 12 27;
+  --surface-rgb: 22 18 39;
+  --surface-container-lowest-rgb: 9 7 18;
+  --surface-container-low-rgb: 28 24 51;
+  --surface-container-rgb: 36 31 64;
+  --surface-container-high-rgb: 45 39 79;
+  --surface-container-highest-rgb: 57 50 98;
+  --surface-bright-rgb: 69 60 117;
+  --on-surface-rgb: 248 247 255;
+  --on-surface-variant-rgb: 216 180 254;
+  --outline-rgb: 126 34 206;
+  --outline-variant-rgb: 74 14 122;
+  --secondary-rgb: 233 213 255;
+  --secondary-container-rgb: 107 33 168;
+  --tertiary-rgb: 192 132 252;
+  --tertiary-container-rgb: 147 51 234;
+}
+
 @layer base {
   html, body {
     margin: 0;
     padding: 0;
-    background-color: #131412;
-    color: #e4e2df;
+    background-color: rgb(var(--background-rgb));
+    color: rgb(var(--on-surface-rgb));
     font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
   body {
     overscroll-behavior: none;

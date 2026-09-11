@@ -17,7 +17,9 @@ import {
   Heart,
   X,
   Navigation,
-  Trash2
+  Trash2,
+  Check,
+  Palette
 } from 'lucide-react'
 import ConfettiCanvas from './components/ConfettiCanvas'
 import AudioPlayer from './components/AudioPlayer'
@@ -29,13 +31,16 @@ import HostSettingsDrawer from './components/HostSettingsDrawer'
 import {
   getRsvps,
   saveOrUpdateRsvp,
-  loginOrCreateGuest,
+  findGuestRsvp,
+  deduplicateRsvps,
   getGraduationInfo,
   updateGraduationInfo,
   getWishes,
+  addWish,
   deleteWish,
   deleteRsvp
 } from './services/api'
+import { THEMES, applyTheme, getCurrentTheme } from './services/themes'
 
 const DEFAULT_HOST = {
   graduateName: '',
@@ -47,7 +52,8 @@ const DEFAULT_HOST = {
   address: '',
   dressCode: '',
   avatarUrl: '/avatar.jpg',
-  quote: ''
+  quote: '',
+  theme: 'gold'
 }
 
 export default function App() {
@@ -61,7 +67,10 @@ export default function App() {
   // Host info state
   const [hostData, setHostData] = useState(() => {
     const saved = localStorage.getItem('graduation_host_data')
-    return saved ? JSON.parse(saved) : DEFAULT_HOST
+    const initial = saved ? JSON.parse(saved) : DEFAULT_HOST
+    const theme = initial.theme || getCurrentTheme()
+    applyTheme(theme)
+    return { ...DEFAULT_HOST, ...initial, theme }
   })
 
   // Guest RSVP list state
@@ -128,7 +137,7 @@ export default function App() {
 
     getRsvps().then(data => {
       if (Array.isArray(data)) {
-        const cleaned = data.filter(item => !item.name?.toLowerCase().includes('nguyễn văn'))
+        const cleaned = deduplicateRsvps(data.filter(item => !item.name?.toLowerCase().includes('nguyễn văn')))
         setRsvpList(cleaned)
         localStorage.setItem('graduation_rsvp_list', JSON.stringify(cleaned))
       }
@@ -142,24 +151,47 @@ export default function App() {
       }
     })
 
-    // 3. Check URL query parameters & auto-login guest
+    // 3. Check URL query parameters & populate guest personalization (KHÔNG tạo RSVP giả)
     const params = new URLSearchParams(window.location.search)
-    const guestParam = params.get('guest') || params.get('name')
+    const guestParam = (params.get('guest') || params.get('name') || '').trim()
+    const themeParam = params.get('theme')
+
+    if (themeParam) {
+      applyTheme(themeParam)
+    }
+
     if (guestParam) {
-      loginOrCreateGuest(guestParam).then(guest => {
-        if (guest) {
-          setCurrentGuest(guest)
+      findGuestRsvp(guestParam).then(existingGuest => {
+        if (existingGuest) {
+          const effectiveTheme = themeParam || existingGuest.theme || hostData.theme || 'gold'
+          applyTheme(effectiveTheme)
+          setCurrentGuest({ ...existingGuest, theme: effectiveTheme })
           setRsvpForm({
-            name: guest.name || guestParam,
-            phone: guest.phone || '',
-            plan: guest.plan || 'Chụp ảnh + Đi cả tiệc quẩy trưa',
-            attendance: guest.attendance || 'yes',
-            wish: guest.wish || ''
+            name: existingGuest.name || guestParam,
+            phone: existingGuest.phone || '',
+            plan: existingGuest.plan || 'Chụp ảnh + Đi cả tiệc quẩy trưa',
+            attendance: existingGuest.attendance || 'yes',
+            wish: existingGuest.wish || '',
+            theme: effectiveTheme
           })
-          setWishAuthor(guest.name || guestParam)
+          setWishAuthor(existingGuest.name || guestParam)
+        } else {
+          const effectiveTheme = themeParam || hostData.theme || 'gold'
+          applyTheme(effectiveTheme)
+          setCurrentGuest({ name: guestParam, theme: effectiveTheme })
+          setRsvpForm({
+            name: guestParam,
+            phone: '',
+            plan: 'Chụp ảnh + Đi cả tiệc quẩy trưa',
+            attendance: 'yes',
+            wish: '',
+            theme: effectiveTheme
+          })
+          setWishAuthor(guestParam)
         }
       })
     }
+
     // 4. Scroll-based nav highlight (chính xác cả lướt lên & xuống)
     const NAV_SECTION_IDS = ['invitation', 'itinerary', 'map-guide', 'rsvp-section']
     const handleScroll = () => {
@@ -208,68 +240,72 @@ export default function App() {
     await updateGraduationInfo(newData)
   }
 
-  // 1. Điểm danh / Gửi Form RSVP (Cập nhật đúng ID trên MockAPI)
+  // 1. Điểm danh / Gửi Form RSVP (Lưu hoặc Cập nhật đúng một bản ghi RSVP chuẩn xác kèm màu sắc riêng vào MockAPI)
   const handleRsvpSubmit = async (e) => {
     e.preventDefault()
-    if (!rsvpForm.name.trim()) return
+    if (!rsvpForm.name || !rsvpForm.name.trim()) return
+
+    const trimmedName = rsvpForm.name.trim()
+    const isAttending = rsvpForm.attendance === 'yes'
+    const selectedTheme = rsvpForm.theme || currentGuest?.theme || hostData.theme || 'gold'
 
     const payload = {
-      ...(currentGuest || {}),
-      name: rsvpForm.name.trim(),
-      phone: rsvpForm.phone.trim(),
-      plan: rsvpForm.plan,
-      attendance: rsvpForm.attendance,
-      wish: rsvpForm.wish.trim(),
-      timestamp: new Date().toLocaleTimeString()
+      ...(currentGuest?.id ? { id: currentGuest.id } : {}),
+      name: trimmedName,
+      phone: rsvpForm.phone?.trim() || '',
+      plan: isAttending ? (rsvpForm.plan || 'Chụp ảnh + Đi cả tiệc quẩy trưa') : 'Vắng mặt (Gửi lời chúc)',
+      attendance: rsvpForm.attendance || 'yes',
+      wish: rsvpForm.wish?.trim() || '',
+      theme: selectedTheme,
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     }
 
     const saved = await saveOrUpdateRsvp(payload)
-    setCurrentGuest(saved)
-    setRsvpList(prev => {
-      const exists = prev.some(r => r.id === saved.id)
-      return exists ? prev.map(r => r.id === saved.id ? saved : r) : [saved, ...prev]
-    })
+    if (saved) {
+      setCurrentGuest(saved)
+      setRsvpList(prev => deduplicateRsvps([saved, ...prev.filter(r => r.name?.trim().toLowerCase() !== saved.name?.trim().toLowerCase())]))
 
-    const updatedWishes = await getWishes()
-    setWishes(updatedWishes)
+      if (saved.wish) {
+        const updatedWishes = await getWishes()
+        setWishes(updatedWishes)
+      }
 
-    const newUrl = `${window.location.pathname}?guest=${encodeURIComponent(saved.name)}`
-    window.history.pushState({ path: newUrl }, '', newUrl)
+      const themeQuery = selectedTheme && selectedTheme !== 'gold' ? `&theme=${encodeURIComponent(selectedTheme)}` : ''
+      const newUrl = `${window.location.pathname}?guest=${encodeURIComponent(saved.name)}${themeQuery}`
+      window.history.pushState({ path: newUrl }, '', newUrl)
 
-    triggerConfetti()
-    showToast('Đã xác nhận tham gia tiệc thành công!')
+      triggerConfetti()
+      showToast(saved.attendance === 'no' ? 'Đã ghi nhận phản hồi vắng mặt & lời nhắn của bạn! 💌' : 'Đã xác nhận tham gia tiệc tốt nghiệp thành công! 🎓')
+    }
   }
 
-  // 2. Gửi lời chúc vào Lưu bút (Lưu vào đúng ID của người dùng)
+  // 2. Gửi lời chúc vào Lưu bút (Lưu lời chúc độc lập, không làm thay đổi hay tạo fake RSVP)
   const handleSendWish = async (e) => {
     e.preventDefault()
     if (!wishInput.trim()) return
 
     const authorName = wishAuthor.trim() || currentGuest?.name || 'Khách Quý'
-    const targetGuest = (currentGuest && currentGuest.name?.toLowerCase() === authorName.toLowerCase())
-      ? currentGuest 
-      : await loginOrCreateGuest(authorName)
-
-    const payload = {
-      ...targetGuest,
-      name: authorName,
-      wish: wishInput.trim(),
-      timestamp: new Date().toLocaleTimeString()
-    }
-
-    const saved = await saveOrUpdateRsvp(payload)
-    setCurrentGuest(saved)
-    setRsvpList(prev => {
-      const exists = prev.some(r => r.id === saved.id)
-      return exists ? prev.map(r => r.id === saved.id ? saved : r) : [saved, ...prev]
+    const newWish = await addWish({
+      author: authorName,
+      text: wishInput.trim(),
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     })
 
-    const updatedWishes = await getWishes()
-    setWishes(updatedWishes)
+    if (newWish) {
+      setWishes(prev => [newWish, ...prev.filter(w => w.id !== newWish.id)])
+
+      // Đồng bộ wish vào currentGuest và rsvpList nếu tác giả đã có RSVP
+      const normAuthor = authorName.toLowerCase()
+      if (currentGuest && currentGuest.name?.trim().toLowerCase() === normAuthor) {
+        setCurrentGuest(prev => prev ? { ...prev, wish: newWish.text } : null)
+        setRsvpForm(prev => ({ ...prev, wish: newWish.text }))
+      }
+      setRsvpList(prev => prev.map(r => r.name?.trim().toLowerCase() === normAuthor ? { ...r, wish: newWish.text } : r))
+    }
 
     setWishInput('')
     triggerConfetti()
-    showToast('Đã gửi lời chúc vào Lưu Bút thành công!')
+    showToast('Đã gửi lời chúc vào Lưu Bút thành công! 💌')
   }
 
   // 3. Xóa lời chúc (bình luận) với Confirm Modal chuẩn thiết kế
@@ -299,16 +335,15 @@ export default function App() {
 
   // 4. Xóa hoàn toàn bản ghi RSVP với Confirm Modal
   const handleDeleteRsvp = (rsvpId) => {
-    const guest = rsvpList.find(r => r.id === rsvpId)
+    const guest = rsvpList.find(r => String(r.id) === String(rsvpId))
     setConfirmModal({
       isOpen: true,
       title: 'Xóa Phản Hồi Khách Mời',
       message: `Bạn có chắc chắn muốn xóa phản hồi tham dự của "${guest?.name || 'khách này'}" không? Dữ liệu sẽ được gỡ bỏ vĩnh viễn.`,
       onConfirm: async () => {
         closeConfirmModal()
-        setRsvpList(prev => prev.filter(r => r.id !== rsvpId))
-        setWishes(prev => prev.filter(w => w.id !== rsvpId))
-        if (currentGuest && currentGuest.id === rsvpId) {
+        setRsvpList(prev => prev.filter(r => String(r.id) !== String(rsvpId)))
+        if (currentGuest && String(currentGuest.id) === String(rsvpId)) {
           setCurrentGuest(null)
         }
         await deleteRsvp(rsvpId)
@@ -331,34 +366,50 @@ export default function App() {
   const toggleFlipCard = () => {
     if (interactiveCardRef.current) {
       interactiveCardRef.current.toggleFlip()
+      // Scroll xuống card sau khi lật
+      const cardEl = document.getElementById('interactive-card')
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
     }
   }
 
-  // 3. Mở phong bì / Nhập tên (Tự động Đăng nhập hoặc Tạo ID mới)
+  // 3. Mở phong bì / Nhập tên (Cá nhân hóa thiệp mà không tạo bản ghi RSVP giả)
   const handleEnvelopeOpen = async (enteredName) => {
     if (!enteredName || !enteredName.trim()) return
     const trimmed = enteredName.trim()
 
-    const guest = await loginOrCreateGuest(trimmed)
-    if (guest) {
-      setCurrentGuest(guest)
+    const existingGuest = await findGuestRsvp(trimmed)
+    if (existingGuest) {
+      const guestTheme = existingGuest.theme || hostData.theme || 'gold'
+      applyTheme(guestTheme)
+      setCurrentGuest({ ...existingGuest, theme: guestTheme })
       setRsvpForm({
-        name: guest.name || trimmed,
-        phone: guest.phone || '',
-        plan: guest.plan || 'Chụp ảnh + Đi cả tiệc quẩy trưa',
-        attendance: guest.attendance || 'yes',
-        wish: guest.wish || ''
+        name: existingGuest.name || trimmed,
+        phone: existingGuest.phone || '',
+        plan: existingGuest.plan || 'Chụp ảnh + Đi cả tiệc quẩy trưa',
+        attendance: existingGuest.attendance || 'yes',
+        wish: existingGuest.wish || '',
+        theme: guestTheme
       })
-      setWishAuthor(guest.name || trimmed)
-
-      setRsvpList(prev => {
-        const exists = prev.some(r => r.id === guest.id)
-        return exists ? prev.map(r => r.id === guest.id ? guest : r) : [guest, ...prev]
+      setWishAuthor(existingGuest.name || trimmed)
+    } else {
+      const currentTheme = hostData.theme || 'gold'
+      applyTheme(currentTheme)
+      setCurrentGuest({ name: trimmed, theme: currentTheme })
+      setRsvpForm({
+        name: trimmed,
+        phone: '',
+        plan: 'Chụp ảnh + Đi cả tiệc quẩy trưa',
+        attendance: 'yes',
+        wish: '',
+        theme: currentTheme
       })
-
-      const newUrl = `${window.location.pathname}?guest=${encodeURIComponent(guest.name)}`
-      window.history.pushState({ path: newUrl }, '', newUrl)
+      setWishAuthor(trimmed)
     }
+
+    const newUrl = `${window.location.pathname}?guest=${encodeURIComponent(trimmed)}`
+    window.history.pushState({ path: newUrl }, '', newUrl)
   }
 
   return (
@@ -726,9 +777,6 @@ export default function App() {
                   ) : null}
                 </div>
 
-                <div className="text-center font-body-sm text-body-sm text-primary">
-                  💡 Cập nhật địa chỉ và thông tin chi tiết trong phần Cài Đặt (biểu tượng ⚙️ góc trên phải).
-                </div>
               </div>
             </section>
 
@@ -768,7 +816,7 @@ export default function App() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+                    <div className={`grid gap-space-sm ${rsvpForm.attendance === 'no' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                       <div>
                         <label className="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-space-2xs">
                           Số Điện Thoại / Zalo
@@ -782,21 +830,23 @@ export default function App() {
                         />
                       </div>
 
-                      <div>
-                        <label className="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-space-2xs">
-                          Kế Hoạch Tham Dự
-                        </label>
-                        <select
-                          value={rsvpForm.plan}
-                          onChange={(e) => setRsvpForm({ ...rsvpForm, plan: e.target.value })}
-                          className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="Chụp ảnh + Đi cả tiệc quẩy trưa">Chụp ảnh + Đi cả tiệc quẩy trưa</option>
-                          <option value="Chỉ kịp ghé chụp ảnh check-in">Chỉ kịp ghé chụp ảnh check-in</option>
-                          <option value="Dẫn theo người yêu (+1)">Dẫn theo người yêu (+1)</option>
-                          <option value="Mang theo bụng đói ăn sập tiệc">Mang theo bụng đói ăn sập tiệc</option>
-                        </select>
-                      </div>
+                      {rsvpForm.attendance === 'yes' && (
+                        <div>
+                          <label className="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-space-2xs">
+                            Kế Hoạch Tham Dự
+                          </label>
+                          <select
+                            value={rsvpForm.plan}
+                            onChange={(e) => setRsvpForm({ ...rsvpForm, plan: e.target.value })}
+                            className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
+                          >
+                            <option value="Chụp ảnh + Đi cả tiệc quẩy trưa">Chụp ảnh + Đi cả tiệc quẩy trưa</option>
+                            <option value="Chỉ kịp ghé chụp ảnh check-in">Chỉ kịp ghé chụp ảnh check-in</option>
+                            <option value="Dẫn theo người yêu (+1)">Dẫn theo người yêu (+1)</option>
+                            <option value="Mang theo bụng đói ăn sập tiệc">Mang theo bụng đói ăn sập tiệc</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -834,25 +884,75 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Lý do vắng mặt / Lời chúc tương ứng */}
                     <div>
                       <label className="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-space-2xs">
-                        Lời Chúc / Nhắn Gửi Cho Tân Cử Nhân
+                        {rsvpForm.attendance === 'no' ? 'Lý Do Không Thể Tham Gia & Lời Nhắn Gửi' : 'Lời Chúc / Nhắn Gửi Cho Tân Cử Nhân'}
                       </label>
                       <textarea
                         value={rsvpForm.wish}
                         onChange={(e) => setRsvpForm({ ...rsvpForm, wish: e.target.value })}
-                        placeholder="VD: Chúc mừng bro tốt nghiệp xuất sắc nhé!"
+                        placeholder={
+                          rsvpForm.attendance === 'no'
+                            ? "VD: Tiếc quá đợt này tớ bận lịch thi/công tác..."
+                            : "VD: Chúc mừng bro tốt nghiệp xuất sắc nhé!"
+                        }
                         rows={2}
                         className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md focus:outline-none focus:ring-1 focus:ring-primary"
                       />
+                    </div>
+
+                    {/* Chọn tông màu thiệp yêu thích của khách */}
+                    <div>
+                      <div className="flex items-center justify-between mb-space-2xs">
+                        <label className="font-label-caps text-[10px] uppercase text-on-surface-variant flex items-center gap-1">
+                          <Palette className="w-3 h-3 text-primary" />
+                          Tông Màu Thiệp Yêu Thích Của Cậu
+                        </label>
+                        <span className="text-[10px] text-primary font-bold">
+                          {THEMES.find(t => t.id === (rsvpForm.theme || hostData.theme || 'gold'))?.name}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1.5 bg-surface-container-highest rounded-lg">
+                        {THEMES.map(t => {
+                          const isCur = (rsvpForm.theme || hostData.theme || 'gold') === t.id
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => {
+                                setRsvpForm(prev => ({ ...prev, theme: t.id }))
+                                applyTheme(t.id)
+                                if (currentGuest) setCurrentGuest(prev => prev ? { ...prev, theme: t.id } : prev)
+                              }}
+                              title={t.name}
+                              className={`h-7 rounded-md flex items-center justify-center transition-all cursor-pointer relative ${
+                                isCur ? 'ring-2 ring-primary scale-105 shadow' : 'opacity-70 hover:opacity-100 hover:scale-105'
+                              }`}
+                              style={{ backgroundColor: t.primaryColor }}
+                            >
+                              {isCur && <Check className="w-3.5 h-3.5 text-black drop-shadow" />}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
 
                     <button
                       type="submit"
                       className="w-full py-space-sm bg-primary text-on-primary font-button-text text-button-text rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-transform flex items-center justify-center gap-2"
                     >
-                      <UserCheck className="w-4 h-4" />
-                      Xác Nhận Giữ Chỗ &amp; Quẩy Tiệc 🎓
+                      {rsvpForm.attendance === 'no' ? (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Gửi Phản Hồi Vắng Mặt &amp; Lời Chúc 💌
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="w-4 h-4" />
+                          Xác Nhận Giữ Chỗ &amp; Quẩy Tiệc 🎓
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>

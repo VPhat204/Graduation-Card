@@ -48,11 +48,11 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
         style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
       >
         {/* CARD FRONT */}
-        <div className="w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl [backface-visibility:hidden] relative overflow-hidden border border-primary/20">
+        <div className={`w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl [backface-visibility:hidden] relative overflow-hidden border border-primary/20 ${isFlipped ? 'pointer-events-none' : ''}`}>
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-surface-container-lowest/80 pointer-events-none"></div>
           <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none rounded-lg bg-transparent opacity-40 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.4)]"></div>
           <div className="absolute top-6 left-6 right-6 bottom-6 pointer-events-none rounded-lg bg-transparent opacity-20 shadow-[inset_0_0_0_1px_rgba(245,215,127,0.3)]"></div>
-          
+
           <div className="absolute top-7 left-7 text-primary/40 select-none pointer-events-none font-headline-lg">✦</div>
           <div className="absolute top-7 right-7 text-primary/40 select-none pointer-events-none font-headline-lg">✦</div>
           <div className="absolute bottom-7 left-7 text-primary/40 select-none pointer-events-none font-headline-lg">✦</div>

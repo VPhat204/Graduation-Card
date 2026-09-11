@@ -11,84 +11,123 @@ const DEFAULT_GRADUATION_INFO = {
   address: '',
   dressCode: '',
   avatarUrl: '',
-  quote: ''
+  quote: '',
+  theme: 'gold'
 }
 
-// Helper to fetch from MockAPI
-let isApiUnavailable = false
-
+// Helper to fetch from MockAPI with retry/timeout safety
 async function tryFetch(endpoint, options = {}) {
-  if (isApiUnavailable || !BASE_URL) return null
+  if (!BASE_URL) return null
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 8000)
 
   try {
-    const res = await fetch(`${BASE_URL}/${endpoint}`, options)
+    const res = await fetch(`${BASE_URL}/${endpoint}`, {
+      ...options,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
     if (res.ok) {
       return await res.json()
     }
     if (res.status === 404) {
-      // If resource not found on MockAPI, gracefully fallback without repeated errors
-      console.info(`[Graduation App] MockAPI /${endpoint} chưa được tạo trên mockapi.io. Ứng dụng tự động lưu trên LocalStorage của bạn.`)
+      console.info(`[Graduation App] Endpoint /${endpoint} không tìm thấy trên MockAPI (404). Sử dụng LocalStorage.`)
     }
   } catch (err) {
-    // Network or CORS error
-    isApiUnavailable = true
-    console.info(`[Graduation App] Không kết nối được MockAPI (${err.message}). Ứng dụng tự động chuyển sang chế độ LocalStorage.`)
+    clearTimeout(timeoutId)
+    console.info(`[Graduation App] MockAPI kết nối không thành công (${err.message}). Tự động lưu trên LocalStorage.`)
   }
   return null
 }
 
+// Helper: Chuẩn hóa và làm sạch danh sách RSVP (loại bỏ trùng lặp theo tên)
+export function deduplicateRsvps(list) {
+  if (!Array.isArray(list)) return []
+  const map = new Map()
+
+  list.forEach(item => {
+    if (!item || !item.name || !item.name.trim()) return
+    const trimmed = item.name.trim()
+    // Bỏ qua các dữ liệu mẫu tự sinh của MockAPI
+    if (/^name\s*\d+$/i.test(trimmed) || trimmed.toLowerCase() === 'name') return
+
+    const key = trimmed.toLowerCase()
+    const existing = map.get(key)
+    if (!existing) {
+      map.set(key, item)
+    } else {
+      // Ưu tiên bản ghi có nhiều thông tin hơn (sđt, kế hoạch không phải mặc định, lời chúc, theme)
+      const preferNew = (item.phone && !existing.phone) ||
+                        (item.wish && !existing.wish) ||
+                        (item.theme && item.theme !== 'gold' && (!existing.theme || existing.theme === 'gold')) ||
+                        (item.plan && item.plan !== 'Gửi lời chúc mừng' && existing.plan === 'Gửi lời chúc mừng') ||
+                        (item.id && !existing.id)
+      if (preferNew) {
+        map.set(key, { ...existing, ...item })
+      } else {
+        map.set(key, { ...item, ...existing })
+      }
+    }
+  })
+
+  return Array.from(map.values())
+}
+
 // ==========================================
-// 1. RSVPs (Danh sách đăng ký tham gia)
+// 1. RSVPs (Danh sách đăng ký tham gia chuẩn xác)
 // ==========================================
 export async function getRsvps() {
   try {
     const data = await tryFetch('rsvps')
-    if (Array.isArray(data) && data.length > 0) {
-      localStorage.setItem('graduation_rsvp_list', JSON.stringify(data))
-      return data
+    if (Array.isArray(data)) {
+      const deduped = deduplicateRsvps(data)
+      localStorage.setItem('graduation_rsvp_list', JSON.stringify(deduped))
+      return deduped
     }
   } catch (err) {
     console.warn("MockAPI getRsvps fallback to localStorage:", err)
   }
   const saved = localStorage.getItem('graduation_rsvp_list')
-  return saved ? JSON.parse(saved) : []
+  return saved ? deduplicateRsvps(JSON.parse(saved)) : []
 }
 
-export async function addRsvp(rsvpData) {
-  const newItem = { ...rsvpData, id: rsvpData.id || String(Date.now()) }
-  try {
-    const data = await tryFetch('rsvps', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newItem)
-    })
-    if (data) {
-      const currentList = JSON.parse(localStorage.getItem('graduation_rsvp_list') || '[]')
-      const updated = [data, ...currentList.filter(item => item.id !== data.id)]
-      localStorage.setItem('graduation_rsvp_list', JSON.stringify(updated))
-      return data
-    }
-  } catch (err) {
-    console.warn("MockAPI addRsvp fallback to localStorage:", err)
-  }
-
-  const currentList = JSON.parse(localStorage.getItem('graduation_rsvp_list') || '[]')
-  const updated = [newItem, ...currentList]
-  localStorage.setItem('graduation_rsvp_list', JSON.stringify(updated))
-  return newItem
+// Tìm thông tin khách mời đã RSVP trước đó (chỉ tra cứu, KHÔNG tự động tạo mới RSVP)
+export async function findGuestRsvp(name) {
+  if (!name || !name.trim()) return null
+  const trimmed = name.trim().toLowerCase()
+  const list = await getRsvps()
+  return list.find(r => r.name && r.name.trim().toLowerCase() === trimmed) || null
 }
 
-// Cập nhật theo ID hoặc tạo mới nếu chưa tồn tại (Upsert gọn gàng)
+// Thêm mới hoặc Cập nhật RSVP một cách chuẩn xác (Lưu màu sắc theme riêng theo từng người vào MockAPI)
 export async function saveOrUpdateRsvp(rsvpData) {
-  const currentList = await getRsvps()
-  
-  // Tìm bản ghi theo ID hoặc theo Tên (không phân biệt hoa thường)
-  const existing = rsvpData.id 
-    ? currentList.find(item => item.id === rsvpData.id)
-    : currentList.find(item => item.name?.trim().toLowerCase() === rsvpData.name?.trim().toLowerCase())
+  if (!rsvpData || !rsvpData.name || !rsvpData.name.trim()) return null
 
-  if (existing) {
-    const updatedItem = { ...existing, ...rsvpData, id: existing.id }
+  const trimmedName = rsvpData.name.trim()
+  const normalizedKey = trimmedName.toLowerCase()
+  const currentList = await getRsvps()
+
+  // Tìm bản ghi hiện có theo ID hoặc theo Tên
+  const existing = currentList.find(item => 
+    (rsvpData.id && String(item.id) === String(rsvpData.id)) ||
+    (item.name && item.name.trim().toLowerCase() === normalizedKey)
+  )
+
+  const timestamp = rsvpData.timestamp || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  const guestTheme = rsvpData.theme || (existing ? existing.theme : undefined) || 'gold'
+
+  if (existing && existing.id) {
+    // Cập nhật bản ghi đã có
+    const updatedItem = {
+      ...existing,
+      ...rsvpData,
+      id: existing.id,
+      name: trimmedName,
+      theme: guestTheme,
+      timestamp
+    }
+
     try {
       const result = await tryFetch(`rsvps/${existing.id}`, {
         method: 'PUT',
@@ -96,78 +135,111 @@ export async function saveOrUpdateRsvp(rsvpData) {
         body: JSON.stringify(updatedItem)
       })
       const finalItem = result || updatedItem
-      const updatedList = currentList.map(item => item.id === existing.id ? finalItem : item)
+      const updatedList = deduplicateRsvps(
+        currentList.map(item => String(item.id) === String(existing.id) ? finalItem : item)
+      )
       localStorage.setItem('graduation_rsvp_list', JSON.stringify(updatedList))
       return finalItem
     } catch (err) {
       console.warn("MockAPI updateRsvp fallback to localStorage:", err)
-      const updatedList = currentList.map(item => item.id === existing.id ? updatedItem : item)
+      const updatedList = deduplicateRsvps(
+        currentList.map(item => String(item.id) === String(existing.id) ? updatedItem : item)
+      )
       localStorage.setItem('graduation_rsvp_list', JSON.stringify(updatedList))
       return updatedItem
     }
   } else {
-    return await addRsvp(rsvpData)
-  }
-}
+    // Tạo bản ghi mới duy nhất
+    const newItem = {
+      ...rsvpData,
+      id: rsvpData.id || String(Date.now()),
+      name: trimmedName,
+      theme: guestTheme,
+      timestamp
+    }
 
-// Đăng nhập người dùng bằng tên: lấy đúng ID cũ hoặc tạo mới nếu lần đầu
-export async function loginOrCreateGuest(name) {
-  if (!name || !name.trim()) return null
-  const trimmed = name.trim()
-  const list = await getRsvps()
-  const existing = list.find(r => r.name?.trim().toLowerCase() === trimmed.toLowerCase())
-  if (existing) {
-    return existing
+    try {
+      const created = await tryFetch('rsvps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      })
+      const finalItem = created || newItem
+      const updatedList = deduplicateRsvps([finalItem, ...currentList.filter(item => item.name?.trim().toLowerCase() !== normalizedKey)])
+      localStorage.setItem('graduation_rsvp_list', JSON.stringify(updatedList))
+      return finalItem
+    } catch (err) {
+      console.warn("MockAPI addRsvp fallback to localStorage:", err)
+      const updatedList = deduplicateRsvps([newItem, ...currentList.filter(item => item.name?.trim().toLowerCase() !== normalizedKey)])
+      localStorage.setItem('graduation_rsvp_list', JSON.stringify(updatedList))
+      return newItem
+    }
   }
-  const newGuest = {
-    name: trimmed,
-    phone: '',
-    plan: 'Chụp ảnh + Đi cả tiệc quẩy trưa',
-    attendance: 'yes',
-    wish: '',
-    timestamp: new Date().toLocaleTimeString()
-  }
-  return await addRsvp(newGuest)
 }
 
 // ==========================================
-// 2. Wishes (Lưu bút & Lời chúc trích xuất từ RSVPs)
+// 2. Wishes (Lưu bút & Lời chúc độc lập)
 // ==========================================
 export async function getWishes() {
+  const savedWishes = JSON.parse(localStorage.getItem('graduation_wishes_list') || '[]')
   const rsvps = await getRsvps()
-  const wishesFromRsvps = rsvps
-    .filter(item => item.wish && item.wish.trim())
-    .map(item => ({
-      id: item.id,
-      author: item.name,
-      text: item.wish,
-      time: item.timestamp || 'Vừa xong'
-    }))
+  
+  // Tổng hợp lời chúc từ cả lưu bút lẫn trường wish trong RSVP
+  const map = new Map()
 
-  localStorage.setItem('graduation_wishes_list', JSON.stringify(wishesFromRsvps))
-  return wishesFromRsvps
+  savedWishes.forEach(w => {
+    if (w && w.text && w.text.trim()) {
+      map.set(`${(w.author || '').trim().toLowerCase()}_${w.text.trim()}`, w)
+    }
+  })
+
+  rsvps.forEach(r => {
+    if (r && r.wish && r.wish.trim()) {
+      const key = `${(r.name || '').trim().toLowerCase()}_${r.wish.trim()}`
+      if (!map.has(key)) {
+        map.set(key, {
+          id: r.id || String(Date.now()),
+          author: r.name,
+          text: r.wish,
+          time: r.timestamp || 'Vừa xong'
+        })
+      }
+    }
+  })
+
+  const merged = Array.from(map.values())
+  localStorage.setItem('graduation_wishes_list', JSON.stringify(merged))
+  return merged
 }
 
 export async function addWish(wishData) {
-  const newWish = { ...wishData, id: String(Date.now()) }
-  
-  // Also post as an RSVP entry so it syncs to MockAPI /rsvps
-  try {
-    await addRsvp({
-      name: wishData.author,
-      phone: '',
-      plan: 'Gửi lời chúc mừng',
-      attendance: 'yes',
-      wish: wishData.text,
-      timestamp: new Date().toLocaleTimeString()
-    })
-  } catch (err) {
-    console.warn("Sync wish to RSVP fallback:", err)
+  if (!wishData || !wishData.text || !wishData.text.trim()) return null
+
+  const newWish = {
+    id: wishData.id || String(Date.now()),
+    author: (wishData.author && wishData.author.trim()) ? wishData.author.trim() : 'Khách Quý',
+    text: wishData.text.trim(),
+    time: wishData.time || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  // Nếu người gửi đã có bản ghi RSVP thì đồng bộ lời chúc vào RSVP của người đó mà không làm đổi kế hoạch tham dự
+  const currentRsvps = await getRsvps()
+  const existingRsvp = currentRsvps.find(r => r.name && r.name.trim().toLowerCase() === newWish.author.toLowerCase())
+  if (existingRsvp && existingRsvp.id) {
+    try {
+      await tryFetch(`rsvps/${existingRsvp.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...existingRsvp, wish: newWish.text })
+      })
+    } catch (err) {
+      console.warn("Sync wish to existing RSVP failed:", err)
+    }
   }
 
   const currentWishes = JSON.parse(localStorage.getItem('graduation_wishes_list') || '[]')
-  const updated = [newWish, ...currentWishes]
-  localStorage.setItem('graduation_wishes_list', JSON.stringify(updated))
+  const updatedWishes = [newWish, ...currentWishes.filter(w => w.id !== newWish.id)]
+  localStorage.setItem('graduation_wishes_list', JSON.stringify(updatedWishes))
   return newWish
 }
 
@@ -206,12 +278,8 @@ export async function deleteRsvp(rsvpId) {
     console.warn("MockAPI deleteRsvp fallback to localStorage:", err)
   }
   const currentList = JSON.parse(localStorage.getItem('graduation_rsvp_list') || '[]')
-  const updated = currentList.filter(item => item.id !== rsvpId)
+  const updated = currentList.filter(item => String(item.id) !== String(rsvpId))
   localStorage.setItem('graduation_rsvp_list', JSON.stringify(updated))
-
-  const currentWishes = JSON.parse(localStorage.getItem('graduation_wishes_list') || '[]')
-  const newWishes = currentWishes.filter(w => w.id !== rsvpId)
-  localStorage.setItem('graduation_wishes_list', JSON.stringify(newWishes))
 
   return updated
 }
