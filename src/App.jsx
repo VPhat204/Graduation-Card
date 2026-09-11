@@ -514,7 +514,7 @@ export default function App() {
       </header>
 
       {/* Main Layout Container */}
-      <main className="w-full pt-20 bg-background flex-1 flex flex-col justify-center">
+      <main className="w-full pt-20 pb-24 md:pb-0 bg-background flex-1 flex flex-col justify-center">
         <div className="flex flex-col w-full relative overflow-hidden selection:bg-primary selection:text-on-primary">
           
           {/* Ambient Glow Effects */}
@@ -1096,7 +1096,7 @@ export default function App() {
             className="flex-1 h-11 bg-primary text-on-primary font-button-text text-button-text rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-space-2xs active:scale-95 transition-all"
           >
             <UserCheck className="w-4 h-4" />
-            Điểm Danh Tham Gia (RSVP)
+            Điểm Danh Tham Gia
           </button>
 
           <button

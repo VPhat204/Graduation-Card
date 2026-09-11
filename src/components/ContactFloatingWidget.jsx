@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Phone, X, Check, Copy, UserCheck, ChevronUp, QrCode, ExternalLink } from 'lucide-react'
 
 export default function ContactFloatingWidget({
@@ -40,7 +40,8 @@ export default function ContactFloatingWidget({
 
   return (
     <>
-      <div ref={menuRef} className="fixed bottom-5 right-5 z-40 flex flex-col items-end">
+      {/* Mobile: icon-only badge above sticky bar | Desktop: full badge at bottom-right */}
+      <div ref={menuRef} className="fixed bottom-20 md:bottom-5 right-4 md:right-5 z-40 flex flex-col items-end">
         {/* Contact Popover Card */}
         <div
           className={`mb-3 w-72 sm:w-80 bg-gradient-to-b from-[#182647]/95 via-[#0e172e]/98 to-[#090e1c]/98 backdrop-blur-xl border border-primary/50 rounded-2xl shadow-2xl shadow-black/80 p-4 transition-all duration-300 origin-bottom-right transform ${
@@ -186,7 +187,9 @@ export default function ContactFloatingWidget({
         {/* Main Floating Trigger Badge Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`group relative flex items-center gap-2 px-3.5 py-2.5 rounded-full border shadow-xl transition-all duration-300 cursor-pointer ${
+          className={`group relative flex items-center gap-2 rounded-full border shadow-xl transition-all duration-300 cursor-pointer
+            px-3.5 py-2.5 md:px-3.5 md:py-2.5
+            ${
             isOpen
               ? 'bg-gradient-to-r from-primary to-amber-500 text-on-primary border-white/40 scale-105 shadow-primary/40'
               : 'bg-surface-container-lowest/90 hover:bg-surface-container-low text-on-surface border-primary/50 hover:border-primary shadow-black/60 hover:shadow-primary/30 hover:scale-105'
@@ -201,14 +204,15 @@ export default function ContactFloatingWidget({
 
           {/* Phone Icon */}
           <div className="flex items-center text-primary group-hover:text-primary transition-colors">
-            <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            <Phone className={`w-4 h-4 group-hover:rotate-12 transition-transform`} />
           </div>
 
-          <span className="font-button-text text-xs font-bold tracking-wide">
+          {/* Text — hidden on mobile, visible on desktop */}
+          <span className="hidden md:inline font-button-text text-xs font-bold tracking-wide">
             Liên Hệ
           </span>
 
-          <ChevronUp className={`w-3.5 h-3.5 text-primary transition-transform duration-300 ${isOpen ? 'rotate-180 text-on-primary' : ''}`} />
+          <ChevronUp className={`hidden md:inline w-3.5 h-3.5 text-primary transition-transform duration-300 ${isOpen ? 'rotate-180 text-on-primary' : ''}`} />
         </button>
       </div>
 

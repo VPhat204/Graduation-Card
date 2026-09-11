@@ -40,15 +40,22 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
   }
 
   return (
-    <section ref={wrapperRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} className="w-full [perspective:1400px]">
+    <section ref={wrapperRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} className="w-full" style={{ perspective: '1400px' }}>
       <div
         ref={cardRef}
         id="interactive-card"
-        className="relative w-full rounded-xl transition-transform duration-700 [transform-style:preserve-3d]"
-        style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+        className="relative w-full rounded-xl transition-transform duration-700"
+        style={{
+          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          transformStyle: 'preserve-3d',
+          WebkitTransformStyle: 'preserve-3d',
+        }}
       >
         {/* CARD FRONT */}
-        <div className={`w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl [backface-visibility:hidden] relative overflow-hidden border border-primary/20 ${isFlipped ? 'pointer-events-none' : ''}`}>
+        <div
+          className={`w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl relative overflow-hidden border border-primary/20 ${isFlipped ? 'pointer-events-none' : ''}`}
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-surface-container-lowest/80 pointer-events-none"></div>
           <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none rounded-lg bg-transparent opacity-40 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.4)]"></div>
           <div className="absolute top-6 left-6 right-6 bottom-6 pointer-events-none rounded-lg bg-transparent opacity-20 shadow-[inset_0_0_0_1px_rgba(245,215,127,0.3)]"></div>
@@ -224,7 +231,14 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
         {/* CARD BACK */}
         <div
           id="card-back"
-          className="absolute inset-0 w-full h-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)] overflow-y-auto flex flex-col justify-between border border-primary/20"
+          className="absolute inset-0 w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl overflow-y-auto flex flex-col justify-between border border-primary/20"
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            WebkitTransform: 'rotateY(180deg)',
+            minHeight: '100%',
+          }}
         >
           <div className="flex flex-col gap-space-lg">
             <div className="flex items-center justify-between">
