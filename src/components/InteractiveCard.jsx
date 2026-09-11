@@ -1,11 +1,35 @@
-import { useRef, forwardRef } from 'react'
-import { Heart, Smile, Camera, MapPin, Palette, Quote, PartyPopper } from 'lucide-react'
+import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react'
+import { Heart, Smile, Camera, MapPin, Palette, Quote, PartyPopper, X } from 'lucide-react'
 
 const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTriggerConfetti }, ref) {
+  const [isFlipped, setIsFlipped] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768)
   const wrapperRef = useRef(null)
 
+  useEffect(() => {
+    const handleResize = () => {
+      const desktop = window.innerWidth >= 768
+      setIsDesktop(desktop)
+      if (!desktop && isFlipped) {
+        setIsFlipped(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isFlipped])
+
+  const toggleFlip = () => {
+    if (window.innerWidth < 768) return
+    setIsFlipped(prev => !prev)
+  }
+
+  // Expose toggleFlip to parent via ref
+  useImperativeHandle(ref, () => ({
+    toggleFlip
+  }))
+
   const handleMouseMove = (e) => {
-    if (!wrapperRef.current) return
+    if (isFlipped || !wrapperRef.current || !isDesktop) return
     const rect = wrapperRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left - rect.width / 2
     const y = e.clientY - rect.top - rect.height / 2
@@ -28,6 +52,29 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
     }
   }
 
+  const DURATION = 300 // ms per half
+  const frontStyle = isDesktop ? {
+    transform: isFlipped
+      ? 'perspective(1000px) rotateY(-90deg)'
+      : 'perspective(1000px) rotateY(0deg)',
+    transition: `transform ${DURATION}ms ease-in`,
+    backfaceVisibility: 'hidden',
+    WebkitBackfaceVisibility: 'hidden',
+    pointerEvents: isFlipped ? 'none' : 'auto',
+  } : {}
+
+  const backStyle = isDesktop ? {
+    transform: isFlipped
+      ? 'perspective(1000px) rotateY(0deg)'
+      : 'perspective(1000px) rotateY(90deg)',
+    transition: isFlipped
+      ? `transform ${DURATION}ms ease-out ${DURATION}ms`
+      : `transform ${DURATION}ms ease-in`,
+    backfaceVisibility: 'hidden',
+    WebkitBackfaceVisibility: 'hidden',
+    pointerEvents: isFlipped ? 'auto' : 'none',
+  } : {}
+
   return (
     <section
       ref={wrapperRef}
@@ -36,10 +83,13 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
       className="w-full"
       style={{ transition: 'transform 0.15s ease' }}
     >
-      <div id="interactive-card" className="w-full">
+      <div id="interactive-card" className="relative w-full">
 
-        {/* CARD */}
-        <div className="w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl relative overflow-hidden border border-primary/20">
+        {/* CARD FRONT */}
+        <div
+          className="w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl relative overflow-hidden border border-primary/20"
+          style={frontStyle}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-surface-container-lowest/80 pointer-events-none"></div>
           <div className="absolute top-4 left-4 right-4 bottom-4 pointer-events-none rounded-lg bg-transparent opacity-40 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.4)]"></div>
           <div className="absolute top-6 left-6 right-6 bottom-6 pointer-events-none rounded-lg bg-transparent opacity-20 shadow-[inset_0_0_0_1px_rgba(245,215,127,0.3)]"></div>
@@ -211,6 +261,75 @@ const InteractiveCard = forwardRef(function InteractiveCard({ hostData, onTrigge
 
           </div>
         </div>
+
+        {/* CARD BACK — Desktop only */}
+        {isDesktop && (
+          <div
+            id="card-back"
+            className="absolute inset-0 w-full bg-surface-container-low rounded-xl p-card-padding-mobile md:p-card-padding-desktop shadow-2xl overflow-y-auto flex flex-col justify-between border border-primary/20"
+            style={backStyle}
+          >
+            <div className="flex flex-col gap-space-lg">
+              <div className="flex items-center justify-between">
+                <span className="font-label-caps text-label-caps uppercase text-primary tracking-widest">
+                  Besties Graduation Memo
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleFlip}
+                  className="w-8 h-8 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
+                  id="close-back-btn"
+                  title="Đóng mặt sau"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <h3 className="font-headline-lg text-headline-lg text-on-surface">
+                Nhắn Nhủ Riêng Cho Đồng Bọn!
+              </h3>
+
+              {hostData.quote ? (
+                <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                  "{hostData.quote}"
+                </p>
+              ) : (
+                <p className="font-body-md text-body-md text-outline leading-relaxed italic">
+                  Cử nhân chưa nhập lời tâm tình. Hãy vào Cài Đặt (⚙️) để thêm lời nhắn gửi hội bạn!
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-space-sm pt-space-md border-t-0">
+                {hostData.date && (
+                  <div className="bg-surface-container p-space-sm rounded-lg">
+                    <span className="font-label-caps text-label-caps uppercase text-primary block">
+                      Thời gian lễ
+                    </span>
+                    <span className="font-body-md text-body-md text-on-surface font-semibold">
+                      {hostData.date} {hostData.time && `• ${hostData.time}`}
+                    </span>
+                  </div>
+                )}
+                {hostData.dressCode && (
+                  <div className="bg-surface-container p-space-sm rounded-lg">
+                    <span className="font-label-caps text-label-caps uppercase text-primary block">
+                      Dress Code
+                    </span>
+                    <span className="font-body-md text-body-md text-on-surface font-semibold">
+                      {hostData.dressCode}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-space-md flex items-center justify-center">
+              <span className="font-subheading-serif text-subheading-serif text-primary italic">
+                Forever Friends • Thanh Xuân Có Nhau Là Đủ!
+              </span>
+            </div>
+          </div>
+        )}
 
       </div>
     </section>
