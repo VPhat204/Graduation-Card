@@ -5,7 +5,6 @@ import {
   Settings,
   CheckCircle2,
   PartyPopper,
-  BookOpen,
   Camera,
   Utensils,
   Sparkles,
@@ -65,7 +64,6 @@ export default function App() {
   const navRef = useRef(null)
   const tabRefs = useRef([])
   const manualNavLock = useRef(false)
-  const interactiveCardRef = useRef(null)
   const [pillStyle, setPillStyle] = useState({ left: 4, width: 0 })
 
   // Host info state
@@ -367,17 +365,6 @@ export default function App() {
     if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const toggleFlipCard = () => {
-    if (interactiveCardRef.current) {
-      interactiveCardRef.current.toggleFlip()
-      // Scroll xuống card sau khi lật
-      const cardEl = document.getElementById('interactive-card')
-      if (cardEl) {
-        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-    }
-  }
-
   // 3. Mở phong bì / Nhập tên (Cá nhân hóa thiệp mà không tạo bản ghi RSVP giả)
   const handleEnvelopeOpen = async (enteredName) => {
     if (!enteredName || !enteredName.trim()) return
@@ -572,22 +559,14 @@ export default function App() {
                   <PartyPopper className="w-4 h-4" />
                   Bắn Pháo Hoa Chúc Mừng
                 </button>
-
-                <button
-                  onClick={toggleFlipCard}
-                  className="px-space-xl py-space-sm bg-surface-container-high hover:bg-surface-bright text-primary font-button-text text-button-text rounded-xl shadow-md transition-all flex items-center justify-center gap-space-xs active:scale-95"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  Lật Mặt Thiệp / Nhắn Gửi Hội Bạn
-                </button>
               </div>
             </section>
 
             {/* 2. Countdown Clock */}
             <CountdownTimer targetDateStr="2026-09-19T10:00:00" />
 
-            {/* 3. Interactive 3D Graduation Envelope & Card */}
-            <InteractiveCard ref={interactiveCardRef} hostData={hostData} onTriggerConfetti={triggerConfetti} />
+            {/* 3. Interactive Graduation Card */}
+            <InteractiveCard hostData={hostData} onTriggerConfetti={triggerConfetti} />
 
             {/* 4. Personalized VIP Ticket Card (Renders if guest is logged or param present) */}
             {currentGuest && (
@@ -1097,14 +1076,6 @@ export default function App() {
           >
             <UserCheck className="w-4 h-4" />
             Điểm Danh Tham Gia
-          </button>
-
-          <button
-            onClick={toggleFlipCard}
-            className="w-12 h-11 rounded-xl bg-surface-container-high hover:bg-surface-bright text-primary flex items-center justify-center active:scale-95 transition-transform shrink-0"
-            title="Lật thiệp"
-          >
-            <BookOpen className="w-5 h-5" />
           </button>
         </div>
       </div>
