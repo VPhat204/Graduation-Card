@@ -1149,36 +1149,37 @@ export default function App() {
             </div>
 
             {/* Map Image Viewport */}
-            <div className="relative w-full bg-black/50 overflow-hidden max-h-[80vh] flex items-center justify-center">
+            <div className="relative w-full bg-black/60 overflow-auto flex items-center justify-center p-2 sm:p-4 max-h-[55vh] sm:max-h-[65vh]">
               <img
                 src="/parking-map.png"
                 alt="Sơ đồ chi tiết đường đi bãi đỗ xe"
-                className="w-full h-auto object-contain max-h-[75vh]"
+                className="w-full h-auto object-contain rounded-lg max-h-[50vh] sm:max-h-[60vh]"
               />
+            </div>
 
-              {/* Exact Floating Instruction Banner at bottom */}
-              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 bg-surface-container-lowest/95 backdrop-blur-xl px-4 py-3 rounded-xl border border-primary/40 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start sm:items-center gap-3">
-                  <span className="text-xl shrink-0 mt-0.5 sm:mt-0">📍</span>
-                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
-                    <span className="font-headline-md text-sm md:text-base text-on-surface font-bold whitespace-nowrap">
-                      Đường đi:
-                    </span>
-                    <span className="font-body-sm text-xs md:text-sm text-on-surface-variant font-medium leading-relaxed">
-                      Rẽ từ đường Đỗ Mười (QL1) vào hẻm 331A–331B An Phú Đông 10 để vào thẳng bãi xe.
-                    </span>
-                  </div>
+            {/* Instruction & Action Section below image (Never covers the map) */}
+            <div className="p-3.5 sm:p-4 bg-surface-container-low border-t border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-start sm:items-center gap-2.5">
+                <span className="text-xl shrink-0 mt-0.5 sm:mt-0">📍</span>
+                <div className="flex flex-col">
+                  <span className="font-headline-md text-xs sm:text-sm text-on-surface font-bold">
+                    Hướng dẫn đường đi:
+                  </span>
+                  <span className="font-body-sm text-[11.5px] sm:text-xs text-on-surface-variant font-medium leading-relaxed">
+                    Rẽ từ đường Đỗ Mười (QL1) vào hẻm 331A–331B An Phú Đông 10 để vào thẳng bãi xe.
+                  </span>
                 </div>
-
-                <a
-                  href="https://maps.google.com/?q=Đỗ+Mười%2F331A-331B+An+Phú+Đông+10%2C+An+Phú+Đông%2C+Hồ+Chí+Minh"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="shrink-0 px-4 py-2 bg-primary text-on-primary text-xs md:text-sm font-button-text font-bold rounded-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-1.5 shadow-lg shadow-primary/25"
-                >
-                  Mở Maps ↗
-                </a>
               </div>
+
+              <a
+                href="https://maps.google.com/?q=Đỗ+Mười%2F331A-331B+An+Phú+Đông+10%2C+An+Phú+Đông%2C+Hồ+Chí+Minh"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-gradient-to-r from-primary to-amber-500 text-on-primary text-xs font-button-text font-bold rounded-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-1.5 shadow-lg shadow-primary/25"
+              >
+                <span>Mở Google Maps</span>
+                <span>↗</span>
+              </a>
             </div>
           </div>
         </div>
