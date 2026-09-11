@@ -43,16 +43,16 @@ import {
 import { THEMES, applyTheme, getCurrentTheme } from './services/themes'
 
 const DEFAULT_HOST = {
-  graduateName: '',
-  degree: '',
-  university: '',
-  date: '',
-  time: '',
-  venue: '',
-  address: '',
-  dressCode: '',
+  graduateName: 'Hồ Văn Phát',
+  degree: 'Tân Cử Nhân Công Nghệ Thông Tin',
+  university: 'Trường Đại Học Nguyễn Tất Thành',
+  date: 'Thứ Bảy, 19 Tháng 09, 2026',
+  time: '10:00 AM',
+  venue: 'Đại sảnh trường Đại học Nguyễn Tất Thành',
+  address: 'Đỗ Mười/331A-331B An Phú Đông 10, An Phú Đông, Hồ Chí Minh, Vietnam',
+  dressCode: 'Lịch sự / Trang phục tự do / Áo Cử Nhân',
   avatarUrl: '/avatar.jpg',
-  quote: '',
+  quote: 'Hành trình vạn dặm bắt đầu từ một bước chân. Cảm ơn vì đã luôn đồng hành cùng tôi!',
   theme: 'gold'
 }
 

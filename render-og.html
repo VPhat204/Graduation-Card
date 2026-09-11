@@ -1,0 +1,413 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>OG Preview Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Alex+Brush&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background: radial-gradient(circle at 75% 45%, #18284d 0%, #0d162a 50%, #060a14 100%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #f1f3f7;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Gold dust bokeh & sparkles */
+    .sparkle {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,230,140,1) 0%, rgba(212,175,55,0.6) 40%, transparent 80%);
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(212, 175, 55, 0.2) 1.2px, transparent 1.2px);
+      background-size: 28px 28px;
+      opacity: 0.7;
+    }
+
+    .main-container {
+      position: relative;
+      z-index: 10;
+      width: 1140px;
+      height: 560px;
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    /* Left: 3D Envelope Mockup */
+    .envelope-box {
+      width: 400px;
+      height: 490px;
+      position: relative;
+      perspective: 1000px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .envelope {
+      width: 370px;
+      height: 260px;
+      background: linear-gradient(145deg, #1b284a 0%, #0e172e 100%);
+      border-radius: 14px;
+      border: 1.5px solid rgba(242, 202, 80, 0.65);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85),
+                  0 0 35px rgba(212, 175, 55, 0.25),
+                  inset 0 0 25px rgba(0,0,0,0.6);
+      position: relative;
+      transform: rotate(-6deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Flap geometry */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 125px;
+      background: linear-gradient(180deg, #243560 0%, #16223e 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      border-bottom: 2px solid rgba(242, 202, 80, 0.8);
+      filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
+    }
+
+    .envelope-body-lines {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 135px;
+      background: linear-gradient(0deg, #131c33 0%, transparent 100%);
+      clip-path: polygon(0 100%, 100% 100%, 50% 15%);
+      opacity: 0.7;
+    }
+
+    /* Wax seal */
+    .wax-seal {
+      position: absolute;
+      top: 100px;
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff2a8 0%, #f1c40f 30%, #d4af37 60%, #87620e 90%, #523b06 100%);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.7), 0 0 15px rgba(241, 196, 15, 0.5), inset 0 2px 5px rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      border: 2px solid #fff5b8;
+    }
+
+    .wax-seal svg {
+      width: 42px;
+      height: 42px;
+      fill: #3b2a02;
+      filter: drop-shadow(0 1px 1px rgba(255,255,255,0.5));
+    }
+
+    .envelope-script {
+      position: absolute;
+      bottom: 24px;
+      font-family: 'Alex Brush', cursive;
+      font-size: 36px;
+      color: #fae4ad;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+      letter-spacing: 1px;
+    }
+
+    .badge-tag {
+      margin-top: 32px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.08) 100%);
+      border: 1px solid rgba(242, 202, 80, 0.6);
+      padding: 7px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #f7d268;
+      text-transform: uppercase;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 12px rgba(212, 175, 55, 0.2);
+    }
+
+    /* Right: Card Content */
+    .card-content {
+      flex: 1;
+      height: 490px;
+      background: linear-gradient(135deg, rgba(25, 37, 68, 0.95) 0%, rgba(14, 21, 40, 0.96) 100%);
+      border-radius: 18px;
+      border: 1.5px solid rgba(242, 202, 80, 0.55);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8),
+                  0 0 45px rgba(212, 175, 55, 0.2),
+                  inset 0 0 0 8px rgba(212, 175, 55, 0.06);
+      padding: 34px 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    /* Ornate corners */
+    .corner-tl, .corner-tr, .corner-bl, .corner-br {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border: 2px solid #f2ca50;
+    }
+    .corner-tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+    .corner-tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+    .corner-bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+    .corner-br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+    .invitation-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      padding-bottom: 10px;
+    }
+
+    .header-sub {
+      font-family: 'Cinzel', serif;
+      font-size: 13.5px;
+      letter-spacing: 4px;
+      color: #f7d268;
+      text-transform: uppercase;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-year {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: #ffe68c;
+      background: rgba(212, 175, 55, 0.18);
+      border: 1px solid rgba(242, 202, 80, 0.5);
+      padding: 3px 14px;
+      border-radius: 14px;
+      font-weight: 700;
+    }
+
+    .hero-title-area {
+      margin-top: 4px;
+    }
+
+    .main-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .graduate-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ffffff 0%, #ffeaa7 20%, #f9ca24 50%, #d4af37 80%, #fff2a8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.5px;
+      margin: 4px 0 6px 0;
+      filter: drop-shadow(0 2px 10px rgba(212, 175, 55, 0.4));
+    }
+
+    .degree-line {
+      font-size: 16px;
+      font-weight: 600;
+      color: #b3cbef;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .degree-line span.uni {
+      color: #fbd364;
+      font-weight: 700;
+    }
+
+    /* Details Box */
+    .details-box {
+      background: rgba(9, 15, 30, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 12px;
+      padding: 13px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #d1d8e6;
+      line-height: 1.4;
+    }
+
+    .detail-icon {
+      font-size: 15px;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      background: rgba(212, 175, 55, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f7ce55;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .detail-text strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Footer CTA */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+    }
+
+    .cta-btn {
+      background: linear-gradient(90deg, #f2ca50 0%, #e67e22 100%);
+      color: #120e00;
+      font-weight: 800;
+      font-size: 13.5px;
+      letter-spacing: 0.8px;
+      padding: 10px 22px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(242, 202, 80, 0.4);
+      text-transform: uppercase;
+    }
+
+    .invitation-tag {
+      font-size: 12px;
+      color: #9cb2d4;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-pattern"></div>
+  <div class="ambient-glow" style="top: 50px; right: 100px;"></div>
+  <div class="ambient-glow" style="bottom: 0px; left: 100px;"></div>
+
+  <div class="sparkle" style="top: 50px; left: 60px; width: 6px; height: 6px;"></div>
+  <div class="sparkle" style="top: 130px; left: 430px; width: 8px; height: 8px;"></div>
+  <div class="sparkle" style="bottom: 70px; left: 140px; width: 6px; height: 6px;"></div>
+  <div class="sparkle" style="top: 70px; right: 100px; width: 8px; height: 8px;"></div>
+  <div class="sparkle" style="bottom: 110px; right: 390px; width: 7px; height: 7px;"></div>
+  <div class="sparkle" style="top: 220px; right: 60px; width: 6px; height: 6px;"></div>
+
+  <div class="main-container">
+    <!-- Left: Luxury Envelope Mockup -->
+    <div class="envelope-box">
+      <div class="envelope">
+        <div class="envelope-flap"></div>
+        <div class="envelope-body-lines"></div>
+        <div class="wax-seal">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+          </svg>
+        </div>
+        <div class="envelope-script">Thư Mời Danh Dự</div>
+      </div>
+      <div class="badge-tag">✦ GRADUATION CARD ✦</div>
+    </div>
+
+    <!-- Right: Invitation Card Details -->
+    <div class="card-content">
+      <div class="corner-tl"></div>
+      <div class="corner-tr"></div>
+      <div class="corner-bl"></div>
+      <div class="corner-br"></div>
+
+      <div class="invitation-header">
+        <span class="header-sub">✦ TRÂN TRỌNG KÍNH MỜI DỰ</span>
+        <span class="header-year">Niên Khóa 2026</span>
+      </div>
+
+      <div class="hero-title-area">
+        <div class="main-title">LỄ TỐT NGHIỆP</div>
+        <div class="graduate-name">HỒ VĂN PHÁT</div>
+        <div class="degree-line">
+          <span>Tân Cử Nhân Công Nghệ Thông Tin</span>
+          <span>•</span>
+          <span class="uni">Đại Học Nguyễn Tất Thành</span>
+        </div>
+      </div>
+
+      <div class="details-box">
+        <div class="detail-row">
+          <div class="detail-icon">📅</div>
+          <div class="detail-text">
+            <strong>Thời gian:</strong> Thứ Bảy, 19 Tháng 09, 2026 — <strong>10:00 AM</strong>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon">📍</div>
+          <div class="detail-text">
+            <strong>Địa điểm:</strong> Đại sảnh trường Đại học Nguyễn Tất Thành
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon">🏛️</div>
+          <div class="detail-text">
+            <strong>Địa chỉ:</strong> Đỗ Mười/331A-331B An Phú Đông 10, An Phú Đông, Hồ Chí Minh, Vietnam
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="cta-btn">
+          <span>✉️</span> Mở Thiệp & Nhận Vé VIP
+        </div>
+        <div class="invitation-tag">graduation-card-eta.vercel.app</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
