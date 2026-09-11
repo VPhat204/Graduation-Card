@@ -1,5 +1,5 @@
-﻿import { useState, useRef, useEffect } from 'react'
-import { Phone, MessageCircle, X, Check, Copy, UserCheck, ChevronUp } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Phone, X, Check, Copy, UserCheck, ChevronUp } from 'lucide-react'
 
 export default function ContactFloatingWidget({
   hostData = {}
@@ -178,10 +178,9 @@ export default function ContactFloatingWidget({
           <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
         </span>
 
-        {/* Icons */}
-        <div className="flex items-center gap-1 text-primary group-hover:text-primary transition-colors">
-          <Phone className="w-4 h-4" />
-          <MessageCircle className="w-4 h-4" />
+        {/* Phone Icon */}
+        <div className="flex items-center text-primary group-hover:text-primary transition-colors">
+          <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
         </div>
 
         <span className="font-button-text text-xs font-bold tracking-wide">
