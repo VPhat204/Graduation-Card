@@ -251,11 +251,62 @@ export default function HostSettingsDrawer({
               </label>
               <textarea
                 name="quote"
-                rows={3}
+                rows={2}
                 value={formData.quote}
                 onChange={handleChange}
                 className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md"
               />
+            </div>
+
+            {/* Thông tin liên hệ (SĐT, Zalo, Facebook) */}
+            <div className="p-3 bg-surface-container-lowest/80 rounded-xl border border-primary/30 space-y-2.5">
+              <span className="font-label-caps text-[10px] uppercase text-primary font-bold block">
+                📞 Thông Tin Liên Hệ Của Bạn (Hiển thị góc màn hình)
+              </span>
+
+              <div>
+                <label className="font-label-caps text-[10px] uppercase text-on-surface-variant block mb-1">
+                  Số Điện Thoại
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleChange}
+                  placeholder="Ví dụ: 0901234567"
+                  className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-space-xs">
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase text-on-surface-variant block mb-1">
+                    Link Zalo (hoặc để trống dùng SĐT)
+                  </label>
+                  <input
+                    type="text"
+                    name="zaloUrl"
+                    value={formData.zaloUrl || ''}
+                    onChange={handleChange}
+                    placeholder="https://zalo.me/..."
+                    className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-label-caps text-[10px] uppercase text-on-surface-variant block mb-1">
+                    Link Facebook cá nhân
+                  </label>
+                  <input
+                    type="text"
+                    name="facebookUrl"
+                    value={formData.facebookUrl || ''}
+                    onChange={handleChange}
+                    placeholder="https://facebook.com/..."
+                    className="w-full px-space-md py-space-xs bg-surface-container-highest rounded-lg text-on-surface font-body-md text-xs"
+                  />
+                </div>
+              </div>
             </div>
 
             <button
