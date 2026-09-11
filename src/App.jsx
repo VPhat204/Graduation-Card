@@ -748,7 +748,7 @@ export default function App() {
                     <h5 className="font-subheading-serif text-on-surface font-semibold flex items-center gap-1">
                       Bãi Gửi Xe <span className="text-primary text-xs">↗</span>
                     </h5>
-                    <p className="font-body-sm text-body-sm text-outline">Rẽ hẻm 331A-331B An Phú Đông 10. Bấm xem sơ đồ chỉ đường chi tiết.</p>
+                    <p className="font-body-sm text-body-sm text-outline">Rẽ từ Đỗ Mười (QL1) vào cổng trường NTTU vào thẳng hầm xe. Bấm xem sơ đồ.</p>
                   </div>
 
                   <div className="p-space-md bg-surface-container-low rounded-xl border border-outline-variant flex flex-col items-center text-center">
@@ -1166,7 +1166,7 @@ export default function App() {
                     Hướng dẫn đường đi:
                   </span>
                   <span className="font-body-sm text-[11.5px] sm:text-xs text-on-surface-variant font-medium leading-relaxed">
-                    Rẽ từ đường Đỗ Mười (QL1) vào hẻm 331A–331B An Phú Đông 10 để vào thẳng bãi xe.
+                    Rẽ từ đường Đỗ Mười (QL1) vào cổng trường đại học Nguyễn Tất Thành cơ sở 331A–331B An Phú Đông 10 để vào thẳng hầm xe của trường.
                   </span>
                 </div>
               </div>
