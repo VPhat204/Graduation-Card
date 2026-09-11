@@ -718,11 +718,11 @@ export default function App() {
                   </h3>
                 </div>
                 <div className="flex items-center gap-space-md">
-                  <div className="flex items-center gap-space-2xs font-body-sm text-body-sm text-on-surface-variant">
-                    <span className="w-3 h-3 rounded bg-primary inline-block"></span> Điểm tập kết bạn bè (Booth A1)
-                  </div>
-                  <div className="flex items-center gap-space-2xs font-body-sm text-body-sm text-on-surface-variant">
-                    <span className="w-3 h-3 rounded bg-surface-container-highest inline-block"></span> Khu vực chờ máy lạnh
+                  <div className="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-full shadow-inner">
+                    <span className="inline-flex items-center justify-center w-7">
+                      <span className="w-full border-b-2 border-dashed border-red-500"></span>
+                    </span>
+                    <span className="text-red-400 font-medium text-xs">Đường đi vào bãi xe</span>
                   </div>
                 </div>
               </div>
